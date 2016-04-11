@@ -1,0 +1,32 @@
+# RabbitMQ settings
+
+RABBITMQ_HOST=localhost
+
+RABBITMQ_PORT=5672
+
+RABBITMQ_USERNAME=
+
+RABBITMQ_PASSWORD=
+
+RABBITMQ_VIRTUAL_HOST=/
+
+RABBITMQ_QUEUE=
+
+RABBITMQ_BACKUP_QUEUE=
+
+# InfluxDB settings
+
+INFLUXDB_URL=
+
+INFLUXDB_USERNAME=
+
+INFLUXDB_PASSWORD=
+
+# Name of database
+INFLUXDB_DBNAME=
+
+# Guaranteed to flush to InfluxDB after receiving this many points
+INFLUXDB_POINTS_FLUSH=1000
+
+# Guaranteed to flush to InfluxDB after this many milliseconds
+INFLUXDB_MILLIS_FLUSH=5000
