@@ -1,17 +1,17 @@
 package influxdb;
 
-import rabbitmq.DefaultRabbitMQParser;
 import rabbitmq.Payload;
 import rabbitmq.RabbitMQParser;
 
 import java.text.ParseException;
 import java.util.Observable;
 import java.util.Observer;
-
 import java.util.concurrent.TimeUnit;
+
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Point;
+import rabbitmq.LineMultipleValuesParser;
 
 /**
  * Publishes messages to InfluxDB.
@@ -32,6 +32,7 @@ public class InfluxDBPublisher implements Observer {
         private String dbName = "";
         private int pointsToFlush = 1000;
         private int millisToFlush = 5000;
+        private boolean verifyTimestamp = false;
 
         /**
          * New builder.
@@ -109,6 +110,17 @@ public class InfluxDBPublisher implements Observer {
             }
             return this;
         }
+        
+        /**
+         * Whether to verify the timestamp unit.  Defaults to false.
+         * 
+         * @param verifyTimestamp whether to verify timestamp
+         * @return this builder
+         */
+        public Builder setVerifyTimestamp(boolean verifyTimestamp) {
+            this.verifyTimestamp = verifyTimestamp;
+            return this;
+        }
 
         /**
          * Builds publisher.
@@ -117,7 +129,7 @@ public class InfluxDBPublisher implements Observer {
          */
         public InfluxDBPublisher build() {
             return new InfluxDBPublisher(url, username, password, dbName,
-                pointsToFlush, millisToFlush);
+                pointsToFlush, millisToFlush, verifyTimestamp);
         }
     }
 
@@ -159,24 +171,18 @@ public class InfluxDBPublisher implements Observer {
     /**
      * Parses RabbitMQ payload strings.
      */
-    private static final RabbitMQParser parser = new DefaultRabbitMQParser();
+    private final RabbitMQParser parser;
 
-    /**
-     * New publisher with given url, username, password, and database name.
-     *
-     * @param url url
-     * @param username username
-     * @param password password
-     * @param dbName database name
-     */
     private InfluxDBPublisher(String url, String username, String password,
-        String dbName, int pointsToFlush, int millisToFlush) {
+        String dbName, int pointsToFlush, int millisToFlush,
+        boolean verifyTimestamp) {
         this.url = url;
         this.username = username;
         this.password = password;
         this.dbName = dbName;
         this.pointsToFlush = pointsToFlush;
         this.millisToFlush = millisToFlush;
+        this.parser = new LineMultipleValuesParser(verifyTimestamp);
         influxDB = InfluxDBFactory.connect(url, username, password);
         influxDB.enableBatch(
             pointsToFlush, millisToFlush, TimeUnit.MILLISECONDS);
@@ -198,28 +204,13 @@ public class InfluxDBPublisher implements Observer {
             Payload payload = parser.parse((String) arg);
             Point point = Point
                 .measurement(payload.getMetric())
-                .time(parseTimestamp(payload.getDatum("timestamp")),
-                    TimeUnit.MILLISECONDS)
+                .time(payload.getTimestampValue(), payload.getTimestampUnit())
                 .tag(payload.getTags())
-                .field("value", payload.getDatum("value"))
+                .fields(payload.getFields())
                 .build();
             influxDB.write(dbName, "default", point);
         } catch (ParseException e) {
             throw new IllegalArgumentException(e);
         }
-    }
-
-    /**
-     * Parses timestamp string to timestamp in milliseconds.
-     *
-     * @param timestamp timestamp string
-     * @return timestamp in milliseconds
-     */
-    private static long parseTimestamp(String timestamp) {
-        long t = Long.parseLong(timestamp);
-        if (t > 1_000_000_000_000L) {
-            t /= 1000;
-        }
-        return t;
     }
 }

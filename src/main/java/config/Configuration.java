@@ -1,6 +1,7 @@
 package config;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
@@ -18,7 +19,7 @@ public class Configuration {
     /**
      * File to read.
      */
-    private final String file;
+    private final File file;
     
     /**
      * Settings and values.
@@ -26,11 +27,20 @@ public class Configuration {
     private final Map<String, String> settings = new HashMap<>();
     
     /**
+     * Constructs a new reader for the specified filename.
+     * 
+     * @param file filename
+     */
+    public Configuration(String file) {
+        this.file = new File(file);
+    }
+    
+    /**
      * Constructs a new reader for the specified file.
      * 
      * @param file file
      */
-    public Configuration(String file) {
+    public Configuration(File file) {
         this.file = file;
     }
     

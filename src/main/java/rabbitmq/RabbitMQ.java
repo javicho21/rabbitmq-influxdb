@@ -54,6 +54,11 @@ public class RabbitMQ extends Observable {
      * Name of backup queue, or {@code null} if queue should not be backed up.
      */
     private String backupQueue;
+    
+    /**
+     * Name of error queue, or {@code null} if no error queue.
+     */
+    private String errorQueue;
 
     /**
      * RabbitMQ builder.
@@ -139,13 +144,24 @@ public class RabbitMQ extends Observable {
         }
 
         /**
-         * Sets backup queue
+         * Sets backup queue.
          *
          * @param backupQueue backup queue
          * @return this builder
          */
         public Builder setBackupQueue(String backupQueue) {
             internal.backupQueue = backupQueue;
+            return this;
+        }
+        
+        /**
+         * Sets error queue.
+         * 
+         * @param errorQueue error queue
+         * @return this builder
+         */
+        public Builder setErrorQueue(String errorQueue) {
+            internal.errorQueue = errorQueue;
             return this;
         }
 
@@ -195,6 +211,9 @@ public class RabbitMQ extends Observable {
         if (backupQueue != null) {
             channel.queueDeclarePassive(backupQueue);
         }
+        if (errorQueue != null) {
+            channel.queueDeclarePassive(errorQueue);
+        }
 
         // Consumer
         Consumer consumer = new DefaultConsumer(channel) {
@@ -207,7 +226,15 @@ public class RabbitMQ extends Observable {
                     channel.basicPublish("", backupQueue, null, body);
                 }
                 // Notify observers
-                notifyObservers(new String(body));
+                setChanged();
+                try {
+                    notifyObservers(new String(body));
+                } catch (Exception e) {
+                    // Publish erronous payloads to error queue, if any
+                    if (errorQueue != null) {
+                        channel.basicPublish("", errorQueue, null, body);
+                    }
+                }
             }
         };
         channel.basicConsume(queue, true, consumer);

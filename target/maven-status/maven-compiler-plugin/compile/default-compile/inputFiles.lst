@@ -1,8 +1,9 @@
 /home/aaronzhang/Projects/RabbitMQInfluxDB/src/main/java/config/Configuration.java
+/home/aaronzhang/Projects/RabbitMQInfluxDB/src/main/java/rabbitmq/LineMultipleValuesParser.java
 /home/aaronzhang/Projects/RabbitMQInfluxDB/src/main/java/rabbitmq/RabbitMQ.java
-/home/aaronzhang/Projects/RabbitMQInfluxDB/src/main/java/main/Test.java
 /home/aaronzhang/Projects/RabbitMQInfluxDB/src/main/java/influxdb/InfluxDBPublisher.java
-/home/aaronzhang/Projects/RabbitMQInfluxDB/src/main/java/rabbitmq/DefaultRabbitMQParser.java
+/home/aaronzhang/Projects/RabbitMQInfluxDB/src/main/java/rabbitmq/LineParser.java
 /home/aaronzhang/Projects/RabbitMQInfluxDB/src/main/java/rabbitmq/Payload.java
 /home/aaronzhang/Projects/RabbitMQInfluxDB/src/main/java/rabbitmq/RabbitMQParser.java
+/home/aaronzhang/Projects/RabbitMQInfluxDB/src/main/java/rabbitmq/DefaultParser.java
 /home/aaronzhang/Projects/RabbitMQInfluxDB/src/main/java/main/Main.java

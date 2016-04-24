@@ -3,6 +3,7 @@ package rabbitmq;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A payload from RabbitMQ.
@@ -13,6 +14,16 @@ public class Payload {
      * Metric.
      */
     private String metric = "";
+    
+    /**
+     * Timestamp value.
+     */
+    private long timestampValue = -1;
+    
+    /**
+     * Timestamp unit.
+     */
+    private TimeUnit timestampUnit = null;
 
     /**
      * Tags.
@@ -20,9 +31,9 @@ public class Payload {
     private final Map<String, String> tags = new HashMap<>();
 
     /**
-     * Data.
+     * Fields.
      */
-    private final Map<String, String> data = new HashMap<>();
+    private final Map<String, Object> fields = new HashMap<>();
 
     /**
      * Payload builder.
@@ -51,6 +62,19 @@ public class Payload {
             internal.metric = metric;
             return this;
         }
+        
+        /**
+         * Sets timestamp.
+         * 
+         * @param timestampValue timestamp
+         * @param timestampUnit time unit
+         * @return this builder
+         */
+        public Builder setTimestamp(long timestampValue, TimeUnit timestampUnit) {
+            internal.timestampValue = timestampValue;
+            internal.timestampUnit = timestampUnit;
+            return this;
+        }
 
         /**
          * Adds tag.
@@ -72,7 +96,7 @@ public class Payload {
          * @return this builder
          */
         public Builder addData(String key, String value) {
-            internal.data.put(key, value);
+            internal.fields.put(key, value);
             return this;
         }
 
@@ -82,6 +106,10 @@ public class Payload {
          * @return payload
          */
         public Payload build() {
+            if (internal.timestampUnit == null) {
+                internal.timestampValue = System.currentTimeMillis();
+                internal.timestampUnit = TimeUnit.MILLISECONDS;
+            }
             return internal;
         }
     }
@@ -98,6 +126,20 @@ public class Payload {
      */
     public String getMetric() {
         return metric;
+    }
+    
+    /**
+     * @return timestamp value
+     */
+    public long getTimestampValue() {
+        return timestampValue;
+    }
+    
+    /**
+     * @return timestamp unit
+     */
+    public TimeUnit getTimestampUnit() {
+        return timestampUnit;
     }
 
     /**
@@ -118,10 +160,10 @@ public class Payload {
     }
 
     /**
-     * @return the data
+     * @return the fields
      */
-    public Map<String, String> getData() {
-        return Collections.unmodifiableMap(data);
+    public Map<String, Object> getFields() {
+        return Collections.unmodifiableMap(fields);
     }
     
     /**
@@ -130,7 +172,17 @@ public class Payload {
      * @param key key
      * @return value
      */
-    public String getDatum(String key) {
-        return data.get(key);
+    public Object getDatum(String key) {
+        return fields.get(key);
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("[Payload:%n"
+            + "metric=%s%n"
+            + "tags=%s%n"
+            + "fields=%s%n"
+            + "timestamp=%s %s]",
+            metric, tags, fields, timestampValue, timestampUnit);
     }
 }

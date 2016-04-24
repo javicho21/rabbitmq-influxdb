@@ -1,14 +1,15 @@
 rabbitmq/Payload$Builder.class
 influxdb/InfluxDBPublisher.class
+rabbitmq/DefaultParser.class
 rabbitmq/RabbitMQ$1.class
 rabbitmq/RabbitMQParser.class
-main/Test.class
+rabbitmq/LineParser.class
 main/Main.class
 rabbitmq/RabbitMQ.class
 rabbitmq/Payload$1.class
-rabbitmq/DefaultRabbitMQParser.class
 config/Configuration.class
 rabbitmq/Payload.class
+rabbitmq/LineMultipleValuesParser.class
 influxdb/InfluxDBPublisher$1.class
 rabbitmq/RabbitMQ$Builder.class
 influxdb/InfluxDBPublisher$Builder.class
