@@ -1,5 +1,7 @@
 rabbitmq/Payload$Builder.class
+main/Log$1.class
 influxdb/InfluxDBPublisher.class
+main/Log$Builder.class
 rabbitmq/DefaultParser.class
 rabbitmq/RabbitMQ$1.class
 rabbitmq/RabbitMQParser.class
@@ -7,6 +9,7 @@ rabbitmq/LineParser.class
 main/Main.class
 rabbitmq/RabbitMQ.class
 rabbitmq/Payload$1.class
+main/Log.class
 config/Configuration.class
 rabbitmq/Payload.class
 rabbitmq/LineMultipleValuesParser.class

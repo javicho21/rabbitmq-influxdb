@@ -61,9 +61,25 @@ public class Main {
             System.err.println(USAGE);
             System.exit(1);
         }
+        
         // Read configuration file
         Configuration config = new Configuration(configFile);
         config.read();
+        // Build log
+        Log log = new Log.Builder()
+            .setNormalLog(config.get("NORMAL_LOG"))
+            .setNormalLogNum(Integer.parseInt(
+                config.getOrDefault("NORMAL_LOG_NUM", "0")))
+            .setNormalLogSize(Integer.parseInt(
+                config.getOrDefault("NORMAL_LOG_SIZE", "0")))
+            .setNormalLogInterval(Long.parseLong(
+                config.getOrDefault("NORMAL_LOG_INTERVAL", "0")))
+            .setErrorLog(config.get("ERROR_LOG"))
+            .setErrorLogNum(Integer.parseInt(
+                config.getOrDefault("ERROR_LOG_NUM", "0")))
+            .setErrorLogSize(Integer.parseInt(
+                config.getOrDefault("ERROR_LOG_SIZE", "0")))
+            .build();
         // Build RabbitMQ
         RabbitMQ rabbitMQ = new RabbitMQ.Builder()
             .setHost(config.getOrDefault("RABBITMQ_HOST", "localhost"))
@@ -75,6 +91,8 @@ public class Main {
             .setQueue(config.get("RABBITMQ_QUEUE"))
             .setBackupQueue(config.get("RABBITMQ_BACKUP_QUEUE"))
             .setErrorQueue(config.get("RABBITMQ_ERROR_QUEUE"))
+            .setVerifyTimestamp(verifyTimestamp)
+            .setLog(log)
             .build();
         // Build InfluxDB
         InfluxDBPublisher influxDB = new InfluxDBPublisher.Builder()
@@ -86,11 +104,15 @@ public class Main {
                 config.getOrDefault("INFLUXDB_POINTS_FLUSH", "1000")))
             .setMillisToFlush(Integer.parseInt(
                 config.getOrDefault("INFLUXDB_MILLIS_FLUSH", "5000")))
-            .setVerifyTimestamp(verifyTimestamp)
+            .setPing(Long.parseLong(config.getOrDefault("INFLUXDB_PING", "0")))
+            .setLog(log)
             .build();
+        
         // Setup communication between RabbitMQ and InfluxDB
         rabbitMQ.addObserver(influxDB);
         // Consume messages from RabbitMQ
         rabbitMQ.consume();
+        // Periodically ping InfluxDB
+        influxDB.ping();
     }
 }

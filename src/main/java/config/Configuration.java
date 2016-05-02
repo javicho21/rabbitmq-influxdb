@@ -70,6 +70,13 @@ public class Configuration {
     }
     
     /**
+     * @return the file
+     */
+    public File getFile() {
+        return file;
+    }
+    
+    /**
      * Gets value for given setting, or {@code null} if no value specified in
      * configuration file.
      * 
@@ -90,5 +97,10 @@ public class Configuration {
      */
     public String getOrDefault(String key, String defaultValue) {
         return settings.getOrDefault(key, defaultValue);
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("[Configuration: file=%s]", file);
     }
 }

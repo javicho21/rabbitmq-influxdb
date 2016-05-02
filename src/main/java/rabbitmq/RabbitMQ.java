@@ -1,5 +1,7 @@
 package rabbitmq;
 
+import main.Log;
+
 import java.io.IOException;
 import java.util.Observable;
 import java.util.concurrent.TimeoutException;
@@ -54,11 +56,21 @@ public class RabbitMQ extends Observable {
      * Name of backup queue, or {@code null} if queue should not be backed up.
      */
     private String backupQueue;
-    
+
     /**
      * Name of error queue, or {@code null} if no error queue.
      */
     private String errorQueue;
+    
+    /**
+     * Whether to verify timestamp unit.  If not, assumes nanoseconds.
+     */
+    private boolean verifyTimestamp = false;
+    
+    /**
+     * Log.
+     */
+    private Log log;
 
     /**
      * RabbitMQ builder.
@@ -153,15 +165,37 @@ public class RabbitMQ extends Observable {
             internal.backupQueue = backupQueue;
             return this;
         }
-        
+
         /**
          * Sets error queue.
-         * 
+         *
          * @param errorQueue error queue
          * @return this builder
          */
         public Builder setErrorQueue(String errorQueue) {
             internal.errorQueue = errorQueue;
+            return this;
+        }
+        
+        /**
+         * Whether to verify the timestamp unit.  Defaults to false.
+         * 
+         * @param verifyTimestamp whether to verify timestamp
+         * @return this builder
+         */
+        public Builder setVerifyTimestamp(boolean verifyTimestamp) {
+            internal.verifyTimestamp = verifyTimestamp;
+            return this;
+        }
+        
+        /**
+         * Log.  If not set, this object will not log messages.
+         * 
+         * @param log log
+         * @return this builder
+         */
+        public Builder setLog(Log log) {
+            internal.log = log;
             return this;
         }
 
@@ -171,15 +205,25 @@ public class RabbitMQ extends Observable {
          * @return RabbitMQ
          */
         public RabbitMQ build() {
+            internal.parser =
+                new LineMultipleValuesParser(internal.verifyTimestamp);
+            if (internal.log != null) {
+                internal.log.rabbitCreated(internal);
+            }
             return internal;
         }
     }
 
     /**
+     * Parses RabbitMQ payload strings.
+     */
+    private RabbitMQParser parser;
+
+    /**
      * Instantiates RabbitMQ.
      */
     private RabbitMQ() {
-
+        
     }
 
     /**
@@ -221,19 +265,29 @@ public class RabbitMQ extends Observable {
             public void handleDelivery(String consumerTag, Envelope envelope,
                 AMQP.BasicProperties properties, byte[] body)
                 throws IOException {
+                if (log != null) {
+                    log.rabbitRead();
+                }
                 // Publish to backup queue, if any
                 if (backupQueue != null) {
                     channel.basicPublish("", backupQueue, null, body);
+                    if (log != null) {
+                        log.rabbitBacked();
+                    }
                 }
                 // Notify observers
                 setChanged();
+                String payload = new String(body);
                 try {
-                    notifyObservers(new String(body));
+                    notifyObservers(parser.parse(payload));
                 } catch (Exception e) {
                     // Publish erronous payloads to error queue, if any
+                    boolean backed = false;
                     if (errorQueue != null) {
                         channel.basicPublish("", errorQueue, null, body);
+                        backed = true;
                     }
+                    log.rabbitError(payload, e, backed);
                 }
             }
         };
@@ -287,5 +341,15 @@ public class RabbitMQ extends Observable {
      */
     public String getBackupQueue() {
         return backupQueue;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("[RabbitMQ:%n"
+            + "host=%s%n"
+            + "port=%d%n"
+            + "virtualHost=%s%n"
+            + "queue=%s%n"
+            + "backupQueue=%s]", host, port, virtualHost, queue, backupQueue);
     }
 }

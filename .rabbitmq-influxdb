@@ -1,14 +1,14 @@
 # RabbitMQ settings
 
-RABBITMQ_HOST=localhost
+RABBITMQ_HOST=
 
-RABBITMQ_PORT=5672
+RABBITMQ_PORT=
 
 RABBITMQ_USERNAME=
 
 RABBITMQ_PASSWORD=
 
-RABBITMQ_VIRTUAL_HOST=/
+RABBITMQ_VIRTUAL_HOST=
 
 RABBITMQ_QUEUE=
 
@@ -24,7 +24,6 @@ INFLUXDB_USERNAME=
 
 INFLUXDB_PASSWORD=
 
-# Name of database
 INFLUXDB_DBNAME=
 
 # Guaranteed to flush to InfluxDB after receiving this many points
@@ -32,3 +31,29 @@ INFLUXDB_POINTS_FLUSH=1000
 
 # Guaranteed to flush to InfluxDB after this many milliseconds
 INFLUXDB_MILLIS_FLUSH=5000
+
+# Ping InfluxDB periodically after this many milliseconds, or 0 to disable
+INFLUXDB_PING=5000
+
+# Log settings
+
+# Log for normal performance
+NORMAL_LOG=
+
+# Maximum number of normal log files
+NORMAL_LOG_NUM=10
+
+# Maximum size of each normal log file, in bytes
+NORMAL_LOG_SIZE=1000000
+
+# Time, in milliseconds, between normal log entries
+NORMAL_LOG_INTERVAL=5000
+
+# Log for errors
+ERROR_LOG=
+
+# Maximum number of error log files
+ERROR_LOG_NUM=10
+
+# Maximum size of each error log file, in bytes
+ERROR_LOG_SIZE=1000000
