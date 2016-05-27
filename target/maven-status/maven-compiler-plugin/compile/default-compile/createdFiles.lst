@@ -7,6 +7,7 @@ rabbitmq/RabbitMQ$1.class
 rabbitmq/RabbitMQParser.class
 rabbitmq/LineParser.class
 main/Main.class
+rabbitmq/RabbitMQ$2.class
 rabbitmq/RabbitMQ.class
 rabbitmq/Payload$1.class
 main/Log.class

@@ -13,6 +13,8 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Consumes messages from RabbitMQ. This class is observable and observers will
@@ -61,16 +63,21 @@ public class RabbitMQ extends Observable {
      * Name of error queue, or {@code null} if no error queue.
      */
     private String errorQueue;
-    
+
     /**
-     * Whether to verify timestamp unit.  If not, assumes nanoseconds.
+     * Whether to verify timestamp unit. If not, assumes nanoseconds.
      */
     private boolean verifyTimestamp = false;
-    
+
     /**
      * Log.
      */
     private Log log;
+
+    /**
+     * RabbitMQ connection.
+     */
+    private Connection connection;
 
     /**
      * RabbitMQ builder.
@@ -176,10 +183,10 @@ public class RabbitMQ extends Observable {
             internal.errorQueue = errorQueue;
             return this;
         }
-        
+
         /**
-         * Whether to verify the timestamp unit.  Defaults to false.
-         * 
+         * Whether to verify the timestamp unit. Defaults to false.
+         *
          * @param verifyTimestamp whether to verify timestamp
          * @return this builder
          */
@@ -187,10 +194,10 @@ public class RabbitMQ extends Observable {
             internal.verifyTimestamp = verifyTimestamp;
             return this;
         }
-        
+
         /**
-         * Log.  If not set, this object will not log messages.
-         * 
+         * Log. If not set, this object will not log messages.
+         *
          * @param log log
          * @return this builder
          */
@@ -205,8 +212,8 @@ public class RabbitMQ extends Observable {
          * @return RabbitMQ
          */
         public RabbitMQ build() {
-            internal.parser =
-                new LineMultipleValuesParser(internal.verifyTimestamp);
+            internal.parser
+                = new LineMultipleValuesParser(internal.verifyTimestamp);
             if (internal.log != null) {
                 internal.log.rabbitCreated(internal);
             }
@@ -223,7 +230,7 @@ public class RabbitMQ extends Observable {
      * Instantiates RabbitMQ.
      */
     private RabbitMQ() {
-        
+
     }
 
     /**
@@ -240,7 +247,8 @@ public class RabbitMQ extends Observable {
         factory.setUsername(username);
         factory.setPassword(password);
         factory.setVirtualHost(virtualHost);
-        Connection connection;
+        // Detect if connection is lost
+        factory.setRequestedHeartbeat(5);
         try {
             connection = factory.newConnection();
         } catch (IOException e) {
@@ -295,6 +303,50 @@ public class RabbitMQ extends Observable {
     }
 
     /**
+     * Periodically checks if the connection is open.
+     */
+    public void ping() {
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (!connection.isOpen()) {
+                    timer.cancel();
+                    if (log != null) {
+                        log.rabbitPingError(RabbitMQ.this);
+                    }
+                    // Attempt to reconnect
+                    reconnect();
+                    ping();
+                }
+            }
+        }, 5000, 5000);
+    }
+
+    /**
+     * Attempts to reconnect to RabbitMQ.
+     */
+    private void reconnect() {
+        for (int i = 0; i < 4; i++) {
+            try {
+                Thread.sleep(15000);
+            } catch (InterruptedException e) {
+
+            }
+            try {
+                // Try to reconnect
+                consume();
+                log.rabbitReconnectSuccess(this);
+                return;
+            } catch (Exception e) {
+                log.rabbitReconnectError(this, e);
+            }
+        }
+        // Stop trying after 4 failed attempts
+        System.exit(1);
+    }
+
+    /**
      * @return the host
      */
     public String getHost() {
@@ -342,7 +394,7 @@ public class RabbitMQ extends Observable {
     public String getBackupQueue() {
         return backupQueue;
     }
-    
+
     @Override
     public String toString() {
         return String.format("[RabbitMQ:%n"

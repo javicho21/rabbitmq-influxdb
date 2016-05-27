@@ -265,6 +265,38 @@ public class Log {
     }
     
     /**
+     * Indicates that connection to RabbitMQ has been lost.
+     * 
+     * @param rabbit RabbitMQ
+     */
+    public void rabbitPingError(RabbitMQ rabbit) {
+        logger.log(Level.SEVERE, "lost connection to RabbitMQ:\n{0}", rabbit);
+    }
+    
+    /**
+     * Indicates successful reconnection to RabbitMQ.
+     * 
+     * @param rabbit RabbitMQ
+     */
+    public void rabbitReconnectSuccess(RabbitMQ rabbit) {
+        logger.log(Level.INFO,
+            "successfully reconnected to RabbitMQ:\n{0}", rabbit);
+    }
+    
+    /**
+     * Indicates error reconnecting to RabbitMQ.
+     * 
+     * @param rabbit RabbitMQ
+     * @param e exception
+     */
+    public void rabbitReconnectError(RabbitMQ rabbit, Exception e) {
+        logger.severe(String.format("could not reconnect to RabbitMQ:%n"
+            + "%s%n"
+            + "exception thrown:%n"
+            + "%s", rabbit, e));
+    }
+    
+    /**
      * Indicates that InfluxDB has been instantiated.
      * 
      * @param influx InfluxDB
@@ -288,6 +320,29 @@ public class Log {
      */
     public void influxPingError(InfluxDBPublisher influx, Exception e) {
         logger.severe(String.format("could not ping InfluxDB:%n"
+            + "%s%n"
+            + "exception thrown:%n"
+            + "%s", influx, e));
+    }
+    
+    /**
+     * Indicates successful reconnection to InfluxDB.
+     * 
+     * @param influx InfluxDB
+     */
+    public void influxReconnectSuccess(InfluxDBPublisher influx) {
+        logger.log(Level.INFO,
+            "successfully reconnected to InfluxDB:\n{0}", influx);
+    }
+    
+    /**
+     * Indicates error reconnecting to InfluxDB.
+     * 
+     * @param influx InfluxDB
+     * @param e exception
+     */
+    public void influxReconnectError(InfluxDBPublisher influx, Exception e) {
+        logger.severe(String.format("could not reconnect to InfluxDB:%n"
             + "%s%n"
             + "exception thrown:%n"
             + "%s", influx, e));

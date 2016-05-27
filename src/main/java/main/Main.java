@@ -112,6 +112,8 @@ public class Main {
         rabbitMQ.addObserver(influxDB);
         // Consume messages from RabbitMQ
         rabbitMQ.consume();
+        // Periodically ping RabbitMQ
+        rabbitMQ.ping();
         // Periodically ping InfluxDB
         influxDB.ping();
     }

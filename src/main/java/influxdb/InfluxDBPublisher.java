@@ -111,10 +111,10 @@ public class InfluxDBPublisher implements Observer {
             }
             return this;
         }
-        
+
         /**
          * Sets number of milliseconds between pings, or 0 to disable pings.
-         * 
+         *
          * @param ping ping interval, in milliseconds
          * @return this builder
          */
@@ -122,10 +122,10 @@ public class InfluxDBPublisher implements Observer {
             this.ping = ping;
             return this;
         }
-        
+
         /**
-         * Sets log.  If not set, this object will not log messages.
-         * 
+         * Sets log. If not set, this object will not log messages.
+         *
          * @param log log
          * @return this builder
          */
@@ -153,7 +153,7 @@ public class InfluxDBPublisher implements Observer {
     /**
      * InfluxDB connection.
      */
-    private final InfluxDB influxDB;
+    private InfluxDB influxDB;
 
     /**
      * Guaranteed to flush after receiving this many points.
@@ -184,12 +184,12 @@ public class InfluxDBPublisher implements Observer {
      * Database name.
      */
     private final String dbName;
-    
+
     /**
      * Ping interval, in milliseconds.
      */
     private final long ping;
-    
+
     /**
      * Log.
      */
@@ -197,14 +197,14 @@ public class InfluxDBPublisher implements Observer {
 
     /**
      * Instantiates InfluxDB publisher with given parameters.
-     * 
+     *
      * @param url
      * @param username
      * @param password
      * @param dbName
      * @param pointsToFlush
      * @param millisToFlush
-     * @param ping 
+     * @param ping
      */
     private InfluxDBPublisher(String url, String username, String password,
         String dbName, int pointsToFlush, int millisToFlush, long ping,
@@ -221,9 +221,9 @@ public class InfluxDBPublisher implements Observer {
         influxDB.enableBatch(
             pointsToFlush, millisToFlush, TimeUnit.MILLISECONDS);
     }
-    
+
     /**
-     * Start pinging.  Stops pinging if an exception is thrown.
+     * Start pinging. Stops pinging if an exception is thrown.
      */
     public void ping() {
         if (ping > 0) {
@@ -238,12 +238,39 @@ public class InfluxDBPublisher implements Observer {
                         if (log != null) {
                             log.influxPingError(InfluxDBPublisher.this, e);
                         }
-                        throw new IllegalStateException(
-                            "could not ping InfluxDB", e);
+                        // Attempt to reconnect
+                        reconnect();
+                        ping();
                     }
                 }
             }, ping, ping);
         }
+    }
+
+    /**
+     * Attempts to reconnect to InfluxDB.
+     */
+    private void reconnect() {
+        for (int i = 0; i < 4; i++) {
+            try {
+                Thread.sleep(15000);
+            } catch (InterruptedException e) {
+
+            }
+            try {
+                // Try to reconnect
+                influxDB = InfluxDBFactory.connect(url, username, password);
+                influxDB.enableBatch(
+                    pointsToFlush, millisToFlush, TimeUnit.MILLISECONDS);
+                influxDB.ping();
+                log.influxReconnectSuccess(this);
+                return;
+            } catch (Exception e) {
+                log.influxReconnectError(this, e);
+            }
+        }
+        // Stop trying after 4 failed attempts
+        System.exit(1);
     }
 
     /**
@@ -270,7 +297,7 @@ public class InfluxDBPublisher implements Observer {
             log.influxWrote();
         }
     }
-    
+
     /**
      * @return number of points before flushing
      */
@@ -319,7 +346,7 @@ public class InfluxDBPublisher implements Observer {
     public long getPing() {
         return ping;
     }
-    
+
     @Override
     public String toString() {
         return String.format("[InfluxDBPublisher:%n"
