@@ -4,6 +4,7 @@ import influxdb.InfluxDBPublisher;
 import rabbitmq.RabbitMQ;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicLong;
@@ -231,7 +232,7 @@ public class Log {
      * @param rabbit RabbitMQ
      */
     public void rabbitCreated(RabbitMQ rabbit) {
-        logger.log(Level.INFO, "RabbitMQ created:\n{0}", rabbit);
+        logger.log(Level.INFO, new Date() + ": RabbitMQ created:\n{0}", rabbit);
     }
     
     /**
@@ -257,11 +258,11 @@ public class Log {
      */
     public void rabbitError(String payload, Exception e, boolean backed) {
         rabbitErrors.incrementAndGet();
-        logger.warning(String.format("erroneous payload:%n"
+        logger.warning(String.format("%s: erroneous payload:%n"
             + "%s%n"
             + "exception thrown:%n"
             + "%s%s",
-            payload, e, backed ? "\npayload moved to error queue" : ""));
+            new Date(), payload, e, backed ? "\npayload moved to error queue" : ""));
     }
     
     /**
@@ -270,7 +271,7 @@ public class Log {
      * @param rabbit RabbitMQ
      */
     public void rabbitPingError(RabbitMQ rabbit) {
-        logger.log(Level.SEVERE, "lost connection to RabbitMQ:\n{0}", rabbit);
+        logger.log(Level.SEVERE, new Date() + ": lost connection to RabbitMQ:\n{0}", rabbit);
     }
     
     /**
@@ -280,7 +281,7 @@ public class Log {
      */
     public void rabbitReconnectSuccess(RabbitMQ rabbit) {
         logger.log(Level.INFO,
-            "successfully reconnected to RabbitMQ:\n{0}", rabbit);
+            new Date() + ": successfully reconnected to RabbitMQ:\n{0}", rabbit);
     }
     
     /**
@@ -290,10 +291,10 @@ public class Log {
      * @param e exception
      */
     public void rabbitReconnectError(RabbitMQ rabbit, Exception e) {
-        logger.severe(String.format("could not reconnect to RabbitMQ:%n"
+        logger.severe(String.format("%s: could not reconnect to RabbitMQ:%n"
             + "%s%n"
             + "exception thrown:%n"
-            + "%s", rabbit, e));
+            + "%s", new Date(), rabbit, e));
     }
     
     /**
@@ -302,7 +303,7 @@ public class Log {
      * @param influx InfluxDB
      */
     public void influxCreated(InfluxDBPublisher influx) {
-        logger.log(Level.INFO, "InfluxDB created:\n{0}", influx);
+        logger.log(Level.INFO, new Date() + ": InfluxDB created:\n{0}", influx);
     }
     
     /**
@@ -319,10 +320,10 @@ public class Log {
      * @param e exception thrown from pinging InfluxDB
      */
     public void influxPingError(InfluxDBPublisher influx, Exception e) {
-        logger.severe(String.format("could not ping InfluxDB:%n"
+        logger.severe(String.format("%s: could not ping InfluxDB:%n"
             + "%s%n"
             + "exception thrown:%n"
-            + "%s", influx, e));
+            + "%s", new Date(), influx, e));
     }
     
     /**
@@ -332,7 +333,7 @@ public class Log {
      */
     public void influxReconnectSuccess(InfluxDBPublisher influx) {
         logger.log(Level.INFO,
-            "successfully reconnected to InfluxDB:\n{0}", influx);
+            new Date() + ": successfully reconnected to InfluxDB:\n{0}", influx);
     }
     
     /**
@@ -342,10 +343,10 @@ public class Log {
      * @param e exception
      */
     public void influxReconnectError(InfluxDBPublisher influx, Exception e) {
-        logger.severe(String.format("could not reconnect to InfluxDB:%n"
+        logger.severe(String.format("%s: could not reconnect to InfluxDB:%n"
             + "%s%n"
             + "exception thrown:%n"
-            + "%s", influx, e));
+            + "%s", new Date(), influx, e));
     }
     
     /**
@@ -359,7 +360,8 @@ public class Log {
                 public void run() {
                     long errors = rabbitErrors.getAndSet(0);
                     String msg = String.format(
-                        "read: %d, backed: %d, written: %d, %s: %d",
+                        "%s: read: %d, backed: %d, written: %d, %s: %d",
+                        new Date(),
                         rabbitRead.getAndSet(0),
                         rabbitBacked.getAndSet(0),
                         influxWrote.getAndSet(0),
