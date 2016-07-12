@@ -1,6 +1,7 @@
 rabbitmq/Payload$Builder.class
 main/Log$1.class
 influxdb/InfluxDBPublisher.class
+main/Log$OneLineFormatter.class
 main/Log$Builder.class
 rabbitmq/DefaultParser.class
 rabbitmq/RabbitMQ$1.class
