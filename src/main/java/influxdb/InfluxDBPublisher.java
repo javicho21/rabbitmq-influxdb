@@ -292,7 +292,7 @@ public class InfluxDBPublisher implements Observer {
             .tag(payload.getTags())
             .fields(payload.getFields())
             .build();
-        influxDB.write(dbName, "default", point);
+        influxDB.write(dbName, "autogen", point);
         if (log != null) {
             log.influxWrote();
         }
